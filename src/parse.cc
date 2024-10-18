@@ -3,6 +3,8 @@
 #include <cstring>
 #include <stack>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 std::string get_string(const char* &p, const char *end) {
     std::string res{};
@@ -33,6 +35,9 @@ namespace jjson {
 
 json_t parse(const char * cbegin, const char * cend)
 {   
+    using ::std::cout;
+    using ::std::endl;
+    // ::std::cout << " --- " << cbegin << ::std::endl;
     using ::std::stack;
     struct json_node {
         json_t * jobj;
@@ -48,6 +53,7 @@ json_t parse(const char * cbegin, const char * cend)
     };
     stack<json_node*> stk;
     cbegin += strspn(cbegin, " \n\t"); // 跳过空白字符
+    // ::std::cout << *cbegin << ::std::endl;
     json_node* now;
     if (*cbegin == '{') // 顶层是 dict
         now = new json_node(new json_t(json_val_type::Dict));
@@ -80,7 +86,10 @@ json_t parse(const char * cbegin, const char * cend)
             if (now->jobj->get_val_type() == json_val_type::Array) {
                 if (now->status == json_node::STAT::wait_val) {
                     now->status = json_node::STAT::over;
-                    ++cbegin;
+                    ++cbegin; 
+                    // cbegin += strspn(cbegin, " \n\t"); // 跳过空白字符
+                    continue;
+
                 }
             }
         }
@@ -89,6 +98,8 @@ json_t parse(const char * cbegin, const char * cend)
                 if (now->status == json_node::STAT::wait_key) {
                     now->status = json_node::STAT::over;
                     ++cbegin;
+                    // cbegin += strspn(cbegin, " \n\t");
+                    continue;
                 }
             }
         }
@@ -97,6 +108,7 @@ json_t parse(const char * cbegin, const char * cend)
             now->key = get_string(cbegin, cend);
             if (now->key == "") {
                 f_error = true;
+                // cout << " --- " << endl;
             }
             now->status = json_node::STAT::wait_colon;
             break;
@@ -105,6 +117,7 @@ json_t parse(const char * cbegin, const char * cend)
                 now->status = json_node::STAT::wait_val;
             } else {
                 f_error = true;
+                // cout << "--:" << endl;
             }
             ++cbegin;
             break;
@@ -124,7 +137,11 @@ json_t parse(const char * cbegin, const char * cend)
             default: // new (str)
                 stk.push(now);
                 auto tmp_str = get_string(cbegin, cend);
-                if (tmp_str == "") f_error = true;
+                if (tmp_str == "") {
+                    f_error = true;
+                    // cout << "--++--" << endl;
+                    break;
+                }
                 now = new json_node(new json_t(tmp_str), json_node::STAT::over);
                 break;
             }
@@ -138,6 +155,7 @@ json_t parse(const char * cbegin, const char * cend)
                     now->status = json_node::STAT::over;
                 } else {
                     f_error = true;
+                    // cout << " ++ " << endl;
                 }
                 break;
             case '}':
@@ -145,10 +163,13 @@ json_t parse(const char * cbegin, const char * cend)
                     now->status = json_node::STAT::over;
                 } else {
                     f_error = true;
+                    // cout << " ++ " << endl;
+
                 }
                 break;
             default:
                 f_error = true;
+                // cout << "___" << endl;
                 break;
             }
             ++cbegin;
@@ -159,11 +180,15 @@ json_t parse(const char * cbegin, const char * cend)
             }
             else if (stk.empty()) {
                 f_error = true;
+                // cout << int(*cbegin) << endl;
+                // cout << (cbegin == cend) << endl;
+                // cout << "+++" << endl;
             } else {
                 tmp = stk.top(); stk.pop();
                 comb_json(tmp, now);
                 now = tmp;
             }
+
             if (cbegin < cend && *cbegin == ',') {
                 cbegin ++;
                 if (now->jobj->get_val_type() == json_val_type::Array) {
@@ -185,8 +210,10 @@ json_t parse(const char * cbegin, const char * cend)
         cbegin += strspn(cbegin, " \n\t");
 
     }
+    // cout << f_error << endl;
 
     if (!stk.empty()) f_error = true;
+    // cout << f_error << endl;
     if (f_error) { // 存在错误
         delete now->jobj;
         while (!stk.empty()) {
@@ -206,7 +233,9 @@ json_t parse(const string &x)
 
 json_t parse(ifstream &x)
 {
-    return json_t();
+    ::std::stringstream tmp;
+    tmp << x.rdbuf();
+    return parse(tmp.str());
 }
 
 json_t jjson_utils::operator""_json(const char * c, size_t n)
