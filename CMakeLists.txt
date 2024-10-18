@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.16.0)
 
 project(jjson)
 
-set(CXX_STANDARD 14)
-set(CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(include_dir ${PROJECT_SOURCE_DIR}/include 
                 ${PROJECT_SOURCE_DIR}/include/jjson)

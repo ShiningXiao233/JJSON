@@ -76,17 +76,16 @@ const string json_t::get_string() const
 bool json_t::set_key_val(const string &key, json_t &&val)
 {
     using ::std::make_pair;
-    using ::std::move;
     if (data_type != json_val_type::Dict) {
         return false;
     }
     if (data.dict->find(key) == data.dict->end()) {
-        data.dict->insert(make_pair(key, new json_t(move(val))));
+        data.dict->insert(make_pair(key, new json_t(::std::move(val))));
     } else {
         if (data.dict->at(key) == &val) return true;
         else {
             delete data.dict->at(key);
-            data.dict->at(key) = new json_t(move(val));
+            data.dict->at(key) = new json_t(::std::move(val));
         }
     }
     return true;
