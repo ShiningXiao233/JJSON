@@ -104,6 +104,8 @@ public:
     size_t array_size();
     
     string to_string();
+
+    void export_to_file(const char *);
 };
 
 }

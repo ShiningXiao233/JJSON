@@ -238,11 +238,24 @@ json_t parse(ifstream &x)
     return parse(tmp.str());
 }
 
+json_t parse(const char *filepath)
+{
+    using ::std::ifstream;
+    ifstream t(filepath);
+    if (t.is_open()) 
+        return parse(t);
+    else return json_t();
+}
+
 json_t jjson_utils::operator""_json(const char * c, size_t n)
 {
     return parse(c, c + n);
 }
 
+json_t jjson_utils::operator""_f_json(const char * filepath, size_t)
+{
+    return parse(filepath);
+}
 }
 
 

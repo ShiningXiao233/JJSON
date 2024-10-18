@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <fstream>
 
 namespace jjson {
 
@@ -249,6 +250,12 @@ string json_t::to_string()
         break;
     }
     return res;
+}
+
+void json_t::export_to_file(const char * path)
+{
+    ::std::ofstream f(path);
+    if (f.is_open()) f << to_string();
 }
 
 json_t::_json_t::_json_t(const json_str &x) : str(new json_str(x)) {
